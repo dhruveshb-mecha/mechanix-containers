@@ -1,0 +1,45 @@
+# Fedora 43 minimal base
+FROM fedora:43
+
+# Avoid interactive prompts
+ENV TERM=xterm-256color
+ENV LANG=C.UTF-8
+
+# Update base system and install dev essentials
+RUN dnf5 -y update && \
+    dnf5 -y install \
+        bash \
+        git \
+        gcc \
+        gcc-c++ \
+        clang \
+        cmake \
+        meson \
+        ninja \
+        pkg-config \
+        make \
+        autoconf \
+        automake \
+        libtool \
+        which \
+        findutils \
+        file \
+        sudo \
+        ca-certificates \
+        curl \
+        wget \
+        vim \
+        nano \
+    && dnf5 clean all
+
+# Create a non-root user for development
+RUN useradd -m builder && \
+    echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER builder
+WORKDIR /home/builder
+
+RUN git clone https://github.com/CuarzoSoftware/Louvre.git
+
+# Default shell
+CMD ["/bin/bash"]
