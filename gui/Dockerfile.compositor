@@ -1,45 +1,82 @@
-# Fedora 43 minimal base
 FROM fedora:43
 
-# Avoid interactive prompts
-ENV TERM=xterm-256color
 ENV LANG=C.UTF-8
+ENV TERM=xterm-256color
 
-# Update base system and install dev essentials
+# System update + dev tooling + compositor dependencies
 RUN dnf5 -y update && \
     dnf5 -y install \
+        # Base tools
         bash \
-        git \
-        gcc \
-        gcc-c++ \
-        clang \
-        cmake \
-        meson \
-        ninja \
-        pkg-config \
-        make \
-        autoconf \
-        automake \
-        libtool \
-        which \
-        findutils \
-        file \
         sudo \
-        ca-certificates \
+        git \
         curl \
         wget \
         vim \
         nano \
+        which \
+        file \
+        findutils \
+        ca-certificates \
+        pkg-config \
+        ldconfig \
+        \
+        # Build tools
+        gcc \
+        gcc-c++ \
+        clang \
+        make \
+        cmake \
+        meson \
+        ninja \
+        autoconf \
+        automake \
+        libtool \
+        \
+        # Wayland stack
+        wayland \
+        wayland-devel \
+        libwayland-client \
+        libwayland-server \
+        libwayland-cursor \
+        \
+        # Graphics / Mesa
+        mesa-libEGL-devel \
+        mesa-libGL-devel \
+        mesa-libgbm-devel \
+        libglvnd-devel \
+        \
+        # DRM / Input / Seat
+        libdrm-devel \
+        libinput-devel \
+        libseat-devel \
+        systemd-devel \
+        \
+        # X / Cursor / Keyboard
+        libXcursor-devel \
+        libxkbcommon-devel \
+        \
+        # Rendering / Pixman
+        pixman-devel \
+        \
+        # Fonts
+        fontconfig-devel \
+        \
+        # Display / session
+        libdisplay-info-devel \
+        gdm-devel \
+        \
     && dnf5 clean all
 
-# Create a non-root user for development
+# Non-root dev user
 RUN useradd -m builder && \
     echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER builder
 WORKDIR /home/builder
 
-RUN git clone https://github.com/CuarzoSoftware/Louvre.git
+RUN git clone --branch v2.18.1-1 https://github.com/CuarzoSoftware/Louvre.git
 
-# Default shell
+RUN git clone --branch v0.13.0-1 https://github.com/CuarzoSoftware/SRM.git
+
 CMD ["/bin/bash"]
