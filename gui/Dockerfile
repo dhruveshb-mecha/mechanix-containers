@@ -116,7 +116,7 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # ----------------------------
 # Cargo tooling
 # ----------------------------
-RUN cargo install cargo-deb cargo-genrate-rpm
+RUN cargo install cargo-deb cargo-generate-rpm
 
 # ----------------------------
 # make one assets directory for all mechanix components that we can mount   
@@ -144,7 +144,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rpm \
     rpm2cpio \
     rpmlint \
-    rpmdevtools \
     dnf
 
 # ----------------------------

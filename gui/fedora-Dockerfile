@@ -1,0 +1,144 @@
+FROM fedora:43
+
+# ----------------------------
+# Environment
+# ----------------------------
+ENV RUSTUP_MAX_RETRIES=10
+ENV CARGO_NET_RETRY=10
+ENV CARGO_INCREMENTAL=0
+ENV RUST_BACKTRACE=short
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+
+ENV CC=clang
+ENV CXX=clang++
+
+# ----------------------------
+# Base tools
+# ----------------------------
+RUN dnf5 -y install \
+    ca-certificates \
+    curl \
+    wget \
+    git \
+    jq \
+    nano \
+    cmake \
+    fakeroot \
+    make \
+    gcc \
+    gcc-c++ \
+    pkg-config \
+    python3 \
+    python3-pip \
+    tar \
+    unzip \
+    gnupg2 \
+    file \
+    which \
+    findutils \
+    && dnf5 clean all
+
+# ----------------------------
+# Build tools (CMake / Meson / Ninja / LLVM / Clang)
+# ----------------------------
+RUN dnf5 -y install \
+    ninja \
+    meson \
+    binutils \
+    patchelf \
+    chrpath \
+    llvm \
+    llvm-devel \
+    lld \
+    clang \
+    clang-tools-extra \
+    gdb \
+    strace \
+    ltrace \
+    && dnf5 clean all
+
+# ----------------------------
+# Graphics / Wayland / Audio / Vulkan
+# ----------------------------
+RUN dnf5 -y install \
+    libX11-devel \
+    systemd-devel \
+    libxkbcommon \
+    libxkbcommon-devel \
+    libxkbcommon-x11 \
+    libxkbcommon-x11-devel \
+    wayland-devel \
+    wayland-protocols-devel \
+    mesa-libEGL-devel \
+    mesa-libGL-devel \
+    mesa-libGLES-devel \
+    vulkan-loader-devel \
+    dbus-devel \
+    pam-devel \
+    pulseaudio-libs-devel \
+    alsa-lib-devel \
+    fontconfig \
+    fontconfig-devel \
+    freetype \
+    freetype-devel \
+    expat \
+    expat-devel \
+    && dnf5 clean all
+
+# ----------------------------
+# NuShell (Gemfury repo – Fedora 43)
+# ----------------------------
+RUN tee /etc/yum.repos.d/fury-nushell.repo <<EOF
+[gemfury-nushell]
+name=Gemfury Nushell Repo
+baseurl=https://yum.fury.io/nushell/
+enabled=1
+gpgcheck=0
+gpgkey=https://yum.fury.io/nushell/gpg.key
+EOF
+
+RUN dnf5 -y install nushell && dnf5 clean all
+
+
+# ----------------------------
+# Flutter eLinux
+# ----------------------------
+RUN git clone --depth=1 https://github.com/sony/flutter-elinux.git /opt/flutter-elinux
+ENV PATH="/opt/flutter-elinux/bin:${PATH}"
+
+# ----------------------------
+# Rust 1.91.1
+# ----------------------------
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | sh -s -- -y --default-toolchain 1.91.1
+
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# ----------------------------
+# Cargo tooling (RPM-focused)
+# ----------------------------
+RUN cargo install cargo-rpm cargo-deb
+
+# ----------------------------
+# Native RPM tooling (Fedora)
+# ----------------------------
+RUN dnf5 -y install \
+    rpm-build \
+    rpmdevtools \
+    rpmlint \
+    && dnf5 clean all
+
+# ----------------------------
+# Shared assets directory
+# ----------------------------
+RUN mkdir -p /mechanix-assets
+ENV MECHANIX_ASSETS_DIR="/mechanix-assets"
+
+# ----------------------------
+# Workspace
+# ----------------------------
+WORKDIR /workspace
+RUN git clone https://github.com/mecha-org/mechanix-gui.git
+WORKDIR /workspace/mechanix-gui
+
+CMD ["/bin/bash"]
